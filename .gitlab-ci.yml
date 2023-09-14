@@ -1,0 +1,35 @@
+stages:
+  - environment
+  - check
+  - test
+
+environment-setup:
+  image: continuumio/miniconda3:latest
+  stage: environment
+  cache:
+    paths:
+      - .env/
+  script:
+    - conda env create -f environment.yml -p .env/
+    - source activate ./.env
+
+check-formatting:
+  image: continuumio/miniconda3:latest
+  stage: check
+  needs: 
+    - environment-setup
+  script:
+    - source activate ./.env
+    - |
+      if ! pre-commit run ; then
+        exit 1
+      fi
+
+test-simple-ml:
+  image: continuumio/miniconda3:latest
+  stage: test
+  needs: 
+    - environment-setup
+  script:
+    - source activate ./.env
+    - python run.py --help
