@@ -3,15 +3,22 @@ stages:
   - check
   - test
 
-environment-setup:
-  image: continuumio/miniconda3:latest
-  stage: environment
-  cache:
+default:
+  cache: &cache
     key:
       files:
         - environment.yml
     paths:
       - .env/
+    policy: pull-push
+
+
+environment-setup:
+  image: continuumio/miniconda3:latest
+  stage: environment
+  cache:
+    <<: *cache
+    policy: push
   script:
     - conda env create -f environment.yml -p .env/
     - source activate ./.env
@@ -19,6 +26,9 @@ environment-setup:
 check-formatting:
   image: continuumio/miniconda3:latest
   stage: check
+  cache:
+    <<: *cache
+    policy: pull
   needs: 
     - environment-setup
   script:
@@ -31,6 +41,9 @@ check-formatting:
 test-simple-ml:
   image: continuumio/miniconda3:latest
   stage: test
+  cache:
+    <<: *cache
+    policy: pull
   needs: 
     - environment-setup
   script:
