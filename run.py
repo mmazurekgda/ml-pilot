@@ -1,7 +1,7 @@
 import click
 import logging
 import pyfiglet as pf
-from train import train_cli
+from core.train import train_cli
 
 
 @click.group()

@@ -1,5 +1,5 @@
 import click
-from config import Config
+from core.config import Config
 
 
 def update_configuration(mode: str):

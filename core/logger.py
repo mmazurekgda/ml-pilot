@@ -45,11 +45,11 @@ def activate_logger(
     handlers = [
         logging.StreamHandler(chosen_stdout),
     ]
-    prefix_format = "%(levelname)s: %(message)s"
+    prefix_format = "%(levelname)8s: %(message)s"
     if directory:
         logger_file = f"{directory}/output.log"
         handlers.append(logging.FileHandler(logger_file))
-        prefix_format = "%(asctime)s - %(levelname)s: %(message)s"
+        prefix_format = "%(asctime)s - %(levelname)8s: %(message)s"
 
     handlers[0].setFormatter(CustomFormatter(prefix_format=prefix_format))
     logging.basicConfig(

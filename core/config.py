@@ -3,8 +3,8 @@ import json
 import os
 import copy
 
-from logger import activate_logger
-from defaults import (
+from core.logger import activate_logger
+from options import (
     TRAINING_OPTIONS,
 )
 
@@ -18,17 +18,9 @@ class Config:
         **training_options,
     }
 
-    _options_with_dirs = [
-        # "tfrecords_files",
-        # "tfrecords_validation_files",
-        # "tfrecords_test_files",
-        # "load_weight_path",
-    ]
+    _options_with_dirs = []
 
-    _output_area_dirs = [
-        # "model_checkpoint_out_weight_file",
-        # "tensorboard_log_dir",
-    ]
+    _output_area_dirs = []
 
     def __new__(klass, *_, **__):
         if not hasattr(klass, "instance"):
@@ -56,7 +48,7 @@ class Config:
         self.log.info("Initialized a new config.")
         self._set_working_area()
         self._set_output_area(output_area)
-        self.log.debug("-> Loading default options.")
+        self.log.debug("-> Loading all default options with their values.")
         for prop, fields in self.options.items():
             if not fields.get("default"):
                 msg = f"Option '{prop}' has no default value."

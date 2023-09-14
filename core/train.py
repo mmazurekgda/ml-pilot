@@ -1,8 +1,8 @@
 from datetime import datetime
 import click
 
-from config import Config
-from utils import update_configuration
+from core.config import Config
+from core.utils import update_configuration
 
 
 def train(output_area, config_file, **kwargs):
@@ -47,4 +47,5 @@ def train_cli(output_area, config_file, **kwargs):
     config.log.debug("-> Updating the configuration with CLI parameters.")
     for prop, value in kwargs.items():
         setattr(config, prop, value)
+    config._freeze()
     config.log.info(f"Training a model, started at {start_time}")
