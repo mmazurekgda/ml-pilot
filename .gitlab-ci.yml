@@ -7,6 +7,9 @@ environment-setup:
   image: continuumio/miniconda3:latest
   stage: environment
   cache:
+    key:
+      files:
+        - environment.yml
     paths:
       - .env/
   script:
