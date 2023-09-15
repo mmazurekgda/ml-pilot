@@ -38,7 +38,7 @@ check-formatting:
         exit 1
       fi
 
-test-simple-ml:
+test-simple-cli:
   image: continuumio/miniconda3:latest
   stage: test
   cache:
@@ -48,4 +48,19 @@ test-simple-ml:
     - environment-setup
   script:
     - source activate ./.env
-    - python run.py --help
+    - |
+      if ! python run.py --verbosity DEBUG train test ; then
+        exit 1
+      fi
+
+test-pytest:
+  image: continuumio/miniconda3:latest
+  stage: test
+  cache:
+    <<: *cache
+    policy: pull
+  needs: 
+    - environment-setup
+  script:
+    - source activate ./.env
+    - pytest -s test
