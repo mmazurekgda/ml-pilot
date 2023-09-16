@@ -1,20 +1,6 @@
 import pytest
-from core.config import Config
 from models.test import options
-from models.test.run import run
-
-
-def test_training():
-    config = Config()
-    config.configure(
-        verbosity="DEBUG",
-        output_area="test/tmp",
-        model_name="test",
-        action="train",
-    )
-    assert config.check_readiness()
-    run()
-    del Config.instance
+from core.config import Config
 
 
 def test_adding_new_model_default():

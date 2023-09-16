@@ -13,7 +13,16 @@ def model_cli_generator(model_name: str):
     @add_options(mode="model", model_name=model_name)
     def model_cli(**kwargs):
         config = Config()
-        config.set_model_name(model_name)
+        if config._model_name and config._model_name != model_name:
+            msg = (
+                "Incompatible model name. "
+                f"Expected: {model_name}. "
+                f"Found: {config._model_name}."
+            )
+            config.log.error(msg)
+            raise click.BadParameter(msg)
+        if not config._model_name:
+            config.set_model_name(model_name)
         config.log.debug(
             "-> Updating the MODEL configuration with CLI parameters."
         )

@@ -8,6 +8,7 @@ from core.constants import (
 from core.utils import set_default_options, add_options
 from core.model import model_cli_generator
 from core.train import train_cli_generator
+from core.generate import data_generator_cli_generator
 
 
 def cli_generator():
@@ -45,11 +46,14 @@ cli = click.group(
 )
 
 train_cli = train_cli_generator()
+data_generator_cli = data_generator_cli_generator()
 
 for model_name in ACTIVE_MODEL_NAMES:
     model_cli = model_cli_generator(model_name=model_name)
     train_cli.add_command(model_cli)
+    data_generator_cli.add_command(model_cli)
 cli.add_command(train_cli)
+cli.add_command(data_generator_cli)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 import git
-import json
+import yaml
 import os
 import copy
 from datetime import datetime
@@ -10,8 +10,13 @@ from core.logger import activate_logger
 from options import (
     GENERAL_OPTIONS,
     TRAINING_OPTIONS,
+    TRAINING_STANDARD_CALLBACKS_OPTIONS,
+    TRAINING_TENSORBOARD_OPTIONS,
+    DATA_OPTIONS,
+    DATA_GENERATOR_OPTIONS,
 )
 from core.constants import (
+    PROJECT_NAME,
     POSSIBLE_ACTIONS,
     ACTIVE_MODEL_NAMES,
 )
@@ -20,7 +25,17 @@ from core.constants import (
 class Config:
     general_options = GENERAL_OPTIONS
 
-    training_options = TRAINING_OPTIONS
+    training_options = {
+        **TRAINING_OPTIONS,
+        **TRAINING_STANDARD_CALLBACKS_OPTIONS,
+        **TRAINING_TENSORBOARD_OPTIONS,
+        **DATA_OPTIONS,
+    }
+
+    data_generator_options = {
+        **DATA_GENERATOR_OPTIONS,
+        **DATA_OPTIONS,
+    }
 
     model_options = {}
 
@@ -33,6 +48,7 @@ class Config:
         return {
             **Config.general_options,
             **Config.training_options,
+            **Config.data_generator_options,
             **Config.model_options,
         }
 
@@ -40,12 +56,20 @@ class Config:
         return {
             **self.general_options,
             **self.training_options,
+            **self.data_generator_options,
             **self.model_options,
         }
 
-    _options_with_dirs = []
+    _options_with_dirs = [
+        # "tfrecord_training_files",
+        # "tfrecord_validation_files",
+        # "tfrecord_test_files",
+    ]
 
-    _output_area_dirs = []
+    _output_area_dirs = [
+        "model_checkpoint_out_weight_file",
+        "tensorboard_log_dir_name",
+    ]
 
     def __new__(klass, *_, **__):
         if not hasattr(klass, "instance"):
@@ -59,8 +83,8 @@ class Config:
         self._frozen = False
         self._rigid = False
 
-    def set_action(self, action: str):
-        if self._action:
+    def set_action(self, action: str, ignore_already_set=False):
+        if self._action and not ignore_already_set:
             raise ValueError(
                 f"Action already set to '{self._action}'. "
                 f"Cannot set it to '{action}'."
@@ -166,15 +190,16 @@ class Config:
         config_file = kwargs.get("config_file") or self.config_file
         if config_file:
             self.log.debug(f"-> Loading options from file: '{config_file}'.")
-            with open(config_file) as json_dump:
-                data = json.load(json_dump)
-                for prop, value in json.loads(data).items():
-                    if prop not in self._output_area_dirs:
-                        parsed_value = self._safe_object(prop, value)
-                        setattr(self, prop, parsed_value)
+            with open(config_file) as yaml_dump_file:
+                data = yaml.load(yaml_dump_file, Loader=yaml.FullLoader)
+                if data["_model_name"]:
+                    self.set_model_name(data["_model_name"])
+                for prop, value in data.items():
+                    default = getattr(self, prop)
+                    if prop not in self._output_area_dirs and default != value:
+                        self.__setattr__(prop, value, from_config_file=True)
             self.log.debug("--> Done.")
         else:
-            # self._check_for_non_configurables(all=True)
             self.log.debug(
                 "-> No extra config file given. Leaving default values."
             )
@@ -189,7 +214,7 @@ class Config:
         if action:
             self.set_action(action)
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, key, value, from_config_file=False):
         if key in ["_frozen", "_rigid", "configured"]:
             object.__setattr__(self, key, value)
             return
@@ -197,16 +222,20 @@ class Config:
             raise ValueError("Configuration not yet initialized!")
         new_value = copy.copy(value)  # FIXME: needed? or too paranoid
         if self._frozen and key != "_frozen":
-            msg = "Config became a frozen class. "
-            "No futher changes possible. "
-            f"Tried setting '{key}': '{value}'"
+            msg = (
+                "Config became a frozen class. "
+                "No futher changes possible. "
+                f"Tried setting '{key}': '{value}'"
+            )
             if hasattr(self, "log"):
                 self.log.error(msg)
             raise ValueError(msg)
         if self._rigid and not hasattr(self, key):
-            msg = "Config became a rigid class. "
-            "No additional options possible. "
-            f"Tried setting '{key}': '{value}'"
+            msg = (
+                "Config became a rigid class. "
+                "No additional options possible. "
+                f"Tried setting '{key}': '{value}'"
+            )
             if hasattr(self, "log"):
                 self.log.error(msg)
             raise ValueError(msg)
@@ -216,13 +245,10 @@ class Config:
             if key in self._options_with_dirs and new_value:
                 new_value = self.change_to_local_paths(key, value)
             override_text = "DEFAULT"
-            if self._rigid:
-                override_text = "NEW VALUE"
-                # if not self._safe_JSON(new_value):
-                if not new_value:
-                    self.log.warning(
-                        f"--> Setting an undefined property for '{key}'"
-                    )
+            if from_config_file:
+                override_text = "NEW VALUE FROM CONFIG FILE"
+            elif self._rigid:
+                override_text = "NEW VALUE FROM CLI"
             self.log.debug(f"--> ({override_text}) '{key}': {new_value}")
         object.__setattr__(self, key, new_value)
         # if self._rigid:
@@ -234,8 +260,10 @@ class Config:
             repo.remotes.origin.url.split(".git")[0].split("/")[-1]
             != "gaussino-metahep"
         ):
-            msg = "Invalid working area. "
-            "Must be inside 'GaussinoMetaHEP' repository."
+            msg = (
+                "Invalid working area. "
+                f"Must be inside '{PROJECT_NAME}' repository."
+            )
             self.log.error(msg)
             raise ValueError(msg)
         self.working_area = repo.working_tree_dir
@@ -249,6 +277,73 @@ class Config:
         self.output_area = directory
         self.log.debug(f"-> Output area is: {self.output_area}")
 
+    def paths_to_global(self, paths):
+        directory = self.working_area
+        if type(paths) is str:
+            if paths.startswith("/"):
+                return paths
+            return "/".join([directory, paths])
+        if hasattr(paths, "__iter__"):
+            new_paths = []
+            for path in paths:
+                if path.startswith("/"):
+                    new_paths.append(path)
+                else:
+                    new_paths.append("/".join([directory, path]))
+            return new_paths
+
+    def change_to_local_paths(self, option, paths):
+        if type(paths) is str:
+            return self.ensure_local_path(option, paths)
+        elif hasattr(paths, "__iter__"):
+            new_paths = []
+            for path in paths:
+                new_paths.append(self.ensure_local_path(option, path))
+            return new_paths
+        else:
+            msg = f"-> Invalid options '{option}': '{paths}'."
+            "Must be string or an iterable."
+            self.log.error(msg)
+            raise TypeError(msg)
+
+    def ensure_local_path(self, option, path):
+        if os.path.isabs(path):
+            if not os.path.exists(path) and option != "load_weight_path":
+                msg = (
+                    f"-> The '{option}' has an invalid path. "
+                    f"The file '{path}' does not exist."
+                )
+                self.log.error(msg)
+                raise FileNotFoundError(msg)
+            if self.working_area not in path:
+                msg = (
+                    f"-> The '{option}' has an invalid path. "
+                    f"Must contain the working area: '{self.working_area}'"
+                )
+                self.log.error(msg)
+                raise FileNotFoundError(msg)
+            return path.replace(self.working_area + "/", "")
+        else:
+            if not os.path.exists("/".join([self.working_area, path])):
+                msg = (
+                    f"-> The '{option}' has an invalid path. "
+                    "Must be with respect to "
+                    f"the working area: '{self.working_area}'"
+                )
+                self.log.error(msg)
+                raise FileNotFoundError(msg)
+            return path
+
+    def dump_to_file(self, config_file="config.yaml"):
+        config_path = "/".join([self.output_area, config_file])
+        with open(config_path, "w") as yaml_dump_file:
+            options_values = {
+                key: (getattr(self, key)) for key in self.options()
+            }
+            options_values["_model_name"] = self._model_name
+            yaml.dump(options_values, yaml_dump_file)
+        self.log.debug(f"-> Config dumped to '{config_path}'")
+
     def _rigidify(self):
         self._rigid = True
         self.log.debug(
@@ -261,9 +356,12 @@ class Config:
             "-> Making the options flexible. Additional members possible."
         )
 
-    def _freeze(self):
+    def _freeze(self, dump_to_file=True):
         self._frozen = True
         self.log.debug("-> Freezing options. No additional changes possible.")
+        if dump_to_file:
+            self.log.debug("--> Dumping options to file.")
+            self.dump_to_file()
 
     def _unfreeze(self):
         self._frozen = False
