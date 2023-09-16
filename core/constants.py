@@ -1,6 +1,8 @@
-PROJECT_NAME = "ML CLI Generator"
+PROJECT_NAME = "Gaussino MetaHEP"
 PROJECT_DESCRIPTION = """
-        A CLI generator for ML projects.
+        Gaussino MetaHEP for training and retraining
+        ML models using CaloChallenge setup for fast
+        simulations.
     """
 PROJECT_VERSION = "0.1.0"
 ACTIVE_MODEL_NAMES = [
