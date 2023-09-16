@@ -254,19 +254,25 @@ class Config:
         #     self._check_for_non_configurables(key=key)
 
     def _set_working_area(self):
-        repo = git.Repo(".", search_parent_directories=True)
-        if (
-            repo.remotes.origin.url.split(".git")[0].split("/")[-1]
-            != "gaussino-metahep"
-        ):
+        self.working_area = None
+        repo = None
+        path = None
+        try:
+            repo = git.Repo(".", search_parent_directories=True)
+        except git.exc.InvalidGitRepositoryError:
+            pass
+        if repo:
+            path = repo.working_tree_dir
+            if os.path.exists("/".join([path, "core/constants.py"])):
+                self.working_area = path
+                self.log.debug(f"-> Working area is: {self.working_area}")
+        if not self.working_area:
             msg = (
                 "Invalid working area. "
-                f"Must be inside '{PROJECT_NAME}' repository."
+                f"Must be inside the repo '{PROJECT_NAME}' repository."
             )
             self.log.error(msg)
             raise ValueError(msg)
-        self.working_area = repo.working_tree_dir
-        self.log.debug(f"-> Working area is: {self.working_area}")
 
     def _set_output_area(self, directory):
         if not directory:
