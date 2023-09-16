@@ -109,16 +109,15 @@ class Config:
             )
         if model_name:
             self._model_name = model_name
-            if not self.model_options:
-                model_options = import_module(
-                    f"models.{model_name}.options"
-                ).OPTIONS
-                self.model_options = model_options
-                if self.configured:
-                    self._unrigidify()
-                    for name, value in model_options.items():
-                        setattr(self, name, value["default"])
-                    self._rigidify()
+            model_options = import_module(
+                f"models.{model_name}.options"
+            ).OPTIONS
+            self.model_options.update(model_options)
+            if self.configured:
+                self._unrigidify()
+                for name, value in model_options.items():
+                    setattr(self, name, value["default"])
+                self._rigidify()
         else:
             raise ValueError("No model name specified!")
 

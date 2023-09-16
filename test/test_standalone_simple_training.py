@@ -27,7 +27,6 @@ def test_standalone_simple_training():
     assert run()
     config._unfreeze()
     config.set_action("train", ignore_already_set=True)
-    config._freeze()
     assert run()
     del Config.instance
     output_area.cleanup()
