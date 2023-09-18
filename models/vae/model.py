@@ -1,4 +1,5 @@
 from core.config import Config
+from typing import List
 
 
 def generate_model():
@@ -6,25 +7,37 @@ def generate_model():
 
     config = Config()
 
-    class ReparametrizationTrick(tf.keras.layers.Layer):
+    class LatentSampling(tf.keras.layers.Layer):
         def __call__(self, inputs, **__):
             z_mean, z_log_var, epsilon = inputs
             z_sigma = tf.keras.backend.exp(0.5 * z_log_var)
             return z_mean + z_sigma * epsilon
 
     class VAE(tf.keras.models.Model):
-        def call(self, inputs, **__):
-            _, e_input, angle_input, geo_input, _ = inputs
-            z, _, _ = self.encoder(inputs)
-            return self.decoder([z, e_input, angle_input, geo_input])
+        def call(self, inputs, training: bool = True):
+            latent_v, particle_v, _ = inputs
+            latent_e, z_mean, z_log_var = self.encoder(inputs)
+            if training:
+                latent_v = latent_e
+            kl_loss = -0.5 * (
+                1
+                + z_log_var
+                - tf.keras.backend.square(z_mean)
+                - tf.keras.backend.exp(z_log_var)
+            )
+            return {
+                "shower": self.decoder([latent_v, particle_v]),
+                "kl_loss": kl_loss,
+            }
 
-        def __init__(self, **kwargs):
-            super(VAE, self).__init__(kwargs)
+        def __init__(self):
+            super(VAE, self).__init__()
             self._original_dim = (
                 config.cylinder_z_cell_no
                 * config.cylinder_rho_cell_no
                 * config.cylinder_phi_cell_no
             )
+            self.sampling_layer = LatentSampling()
             self.encoder = self._build_encoder()
             self.decoder = self._build_decoder()
             self._set_inputs(
@@ -32,9 +45,8 @@ def generate_model():
             )
 
         def _build_encoder(self) -> tf.keras.models.Model:
-            inputs = self._prepare_input_layers(for_encoder=True)
-            x = tf.keras.layers.concatenate(inputs[:4])
-
+            inputs = self._prepare_input_layers()
+            x = tf.keras.layers.concatenate(inputs[1:])
             for dim in config.intermediate_dims:
                 x = tf.keras.layers.Dense(
                     units=dim,
@@ -47,8 +59,8 @@ def generate_model():
             z_log_var = tf.keras.layers.Dense(
                 config.latent_dim, name="z_log_var"
             )(x)
-            encoder_output = ReparametrizationTrick()(
-                [z_mean, z_log_var, inputs[4]]
+            encoder_output = self.sampling_layer(
+                [z_mean, z_log_var, inputs[0]]
             )
             return tf.keras.models.Model(
                 inputs=inputs,
@@ -57,7 +69,7 @@ def generate_model():
             )
 
         def _build_decoder(self) -> tf.keras.models.Model:
-            inputs = self._prepare_input_layers(for_encoder=False)
+            inputs = self._prepare_input_layers(training=False)
             x = tf.keras.layers.concatenate(inputs)
             for dim in reversed(config.intermediate_dims):
                 x = tf.keras.layers.Dense(
@@ -77,18 +89,17 @@ def generate_model():
             )
             return decoder
 
-        def _prepare_input_layers(self, for_encoder: bool):
-            e_input = tf.keras.Input(shape=(1,))
-            angle_input = tf.keras.Input(shape=(1,))
-            geo_input = tf.keras.Input(
-                shape=(config.geometry_condition_length,)
-            )
-            if for_encoder:
-                x_input = tf.keras.Input(shape=self._original_dim)
-                eps_input = tf.keras.Input(shape=config.latent_dim)
-                return [x_input, e_input, angle_input, geo_input, eps_input]
-            else:
-                x_input = tf.keras.Input(shape=config.latent_dim)
-                return [x_input, e_input, angle_input, geo_input]
+        def _prepare_input_layers(
+            self, training: bool = True
+        ) -> List[tf.keras.Input]:
+            inputs = [
+                tf.keras.Input((config.latent_dim,)),
+                tf.keras.Input(
+                    (2 + config.geometry_condition_length,),  # geo + angle
+                ),
+            ]
+            if training:
+                inputs.append(tf.keras.Input((self._original_dim,)))
+            return inputs
 
     return VAE()

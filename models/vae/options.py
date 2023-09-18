@@ -16,6 +16,47 @@ GEOMETRY_OPTIONS = {
         "default": 50,
         "type": click.IntRange(min=1),
     },
+    "max_theta": {
+        "help": "Maximum angle of the particles in degrees",
+        "default": 90,
+        "type": click.FloatRange(min=0, max=360),
+    },
+    "max_energy": {
+        "help": "Maximum energy of the particles in GeV",
+        "default": 1024,
+        "type": click.FloatRange(min=0),
+    },
+}
+
+DATALOADER_OPTIONS = {
+    "root_files_path": {
+        "default": None,
+        "help": "Path to the native training files (ROOT). ",
+        "type": click.Path(exists=True),
+    },
+    "hits_key": {
+        "default": "Gsino__CaloChallenge__TrainingDataCollector/CaloHits;1",
+        "help": "Key of the hits in the ROOT files.",
+        "type": str,
+    },
+    "particles_key": {
+        "default": "Gsino__CaloChallenge__TrainingDataCollector/"
+        "CollectorHits;1",
+        "help": "Key of the particles in the ROOT files.",
+        "type": str,
+    },
+    "validation_split": {
+        "default": 0.2,
+        "help": "Validation split with respect to number "
+        "of events in each  ROOT file.",
+        "type": click.FloatRange(min=0, max=1),
+    },
+    "test_split": {
+        "default": 0.1,
+        "help": "Test split with respect to number "
+        "of events in each ROOT file.",
+        "type": click.FloatRange(min=0, max=1),
+    },
 }
 
 VAE_OPTIONS = {
@@ -23,6 +64,11 @@ VAE_OPTIONS = {
         "help": "Length of the geometry condition",
         "default": 3,
         "type": click.IntRange(min=1),
+    },
+    "geometry_condition_position": {
+        "help": "Position in the geometry condition vector.",
+        "default": 0,
+        "type": click.IntRange(min=0),
     },
     "input_activation": {
         "help": "Activation function for the input layers",
@@ -91,5 +137,6 @@ VAE_OPTIONS = {
 
 OPTIONS = {
     **GEOMETRY_OPTIONS,
+    **DATALOADER_OPTIONS,
     **VAE_OPTIONS,
 }
