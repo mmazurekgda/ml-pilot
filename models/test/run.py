@@ -49,8 +49,12 @@ def run() -> bool:
                             config,
                             f"generator_{datatype}_samples_no_per_file",
                         )
+                        files_no = getattr(
+                            config, f"generator_{datatype}_files_no"
+                        )
                         generate_tfrecord_datagenerator(
                             generate_tfrecord_encoder(
+                                files_no=files_no,
                                 samples_no=samples_no,
                             ),
                             datatype,
