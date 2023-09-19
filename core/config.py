@@ -360,6 +360,8 @@ class Config:
         )
 
     def _freeze(self, dump_to_file=True):
+        if self._frozen:
+            return
         self._frozen = True
         self.log.debug("-> Freezing options. No additional changes possible.")
         if dump_to_file:

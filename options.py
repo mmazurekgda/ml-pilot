@@ -104,6 +104,16 @@ TRAINING_STANDARD_CALLBACKS_OPTIONS = {
         "help": "Model checkpoint verbosity",
         "type": int,
     },
+    "model_checkpoint_save_weights_only": {
+        "default": True,
+        "help": "Model checkpoint save weights only",
+        "type": bool,
+    },
+    "model_checkpoint_save_best_only": {
+        "default": True,
+        "help": "Model checkpoint save best only",
+        "type": bool,
+    },
 }
 
 TRAINING_TENSORBOARD_OPTIONS = {
