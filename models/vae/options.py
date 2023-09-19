@@ -16,6 +16,16 @@ GEOMETRY_OPTIONS = {
         "default": 50,
         "type": click.IntRange(min=1),
     },
+    "cylinder_rho_cell_size": {
+        "help": "Size of the cells along rho of the cylinder in mm",
+        "default": 9.0,
+        "type": click.FloatRange(min=0),
+    },
+    "cylinder_z_cell_size": {
+        "help": "Size of the cells along z of the cylinder in mm",
+        "default": 13.824,
+        "type": click.FloatRange(min=0),
+    },
     "max_theta": {
         "help": "Maximum angle of the particles in degrees",
         "default": 90,
@@ -133,10 +143,99 @@ VAE_OPTIONS = {
             ]
         ),
     },
+    "reconstruction_loss": {
+        "help": "Reconstruction loss",
+        "default": "bce",
+        "type": click.Choice(["mse", "bce"]),
+    },
+}
+
+PLOTTING_OPTIONS = {
+    "plot_frequency": {
+        "help": "Frequency of plotting",
+        "default": 10,
+        "type": click.IntRange(min=0),
+    },
+    "plots_full_sim_histogram_color": {
+        "help": "Color of the full simulation histogram",
+        "default": "blue",
+        "type": str,
+    },
+    "plots_ml_sim_histogram_color": {
+        "help": "Color of the ML simulation histogram",
+        "default": "red",
+        "type": str,
+    },
+    "plots_full_sim_gaussian_color": {
+        "help": "Color of the full simulation gaussian",
+        "default": "green",
+        "type": str,
+    },
+    "plots_ml_sim_gaussian_color": {
+        "help": "Color of the ML simulation gaussian",
+        "default": "orange",
+        "type": str,
+    },
+    "plots_histogram_type": {
+        "help": "Type of the histogram",
+        "default": "step",
+        "type": click.Choice(["step", "bar"]),
+    },
+    "plots_mplhep_experiment_header_name": {
+        "help": "Name of the experiment header",
+        "default": "Gauss",
+        "type": str,
+    },
+    "plots_mplhep_llabel_header_name": {
+        "help": "Left Label of the experiment header",
+        "default": "Private Simulation",
+        "type": str,
+    },
+    "plots_mplhep_rlabel_header_name": {
+        "help": "Right Label of the experiment header",
+        "default": None,
+        "type": str,
+    },
+    "plots_mplhep_fontsize": {
+        "help": "Fontsize of the experiment header",
+        "default": 20,
+        "type": click.IntRange(min=1),
+    },
+    "plots_mplhep_legend_loc": {
+        "help": "Location of the legend",
+        "default": 1,
+        "type": click.IntRange(min=0, max=10),
+    },
+    "plots_figsize_x": {
+        "help": "Size of the figure in x",
+        "default": 16,
+        "type": click.IntRange(min=1),
+    },
+    "plots_figsize_y": {
+        "help": "Size of the figure in y",
+        "default": 8,
+        "type": click.IntRange(min=1),
+    },
+}
+
+WANDB_OPTIONS = {
+    "wandb_entity": {
+        "help": "Wandb entity",
+        "default": None,
+        "type": str,
+    },
+    "wandb_tags": {
+        "help": "Wandb tags",
+        "default": [],
+        "type": str,
+        "multiple": True,
+    },
 }
 
 OPTIONS = {
     **GEOMETRY_OPTIONS,
     **DATALOADER_OPTIONS,
     **VAE_OPTIONS,
+    **PLOTTING_OPTIONS,
+    **WANDB_OPTIONS,
 }

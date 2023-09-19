@@ -27,7 +27,7 @@ def generate_model():
             )
             return {
                 "shower": self.decoder([latent_v, particle_v]),
-                "kl_loss": kl_loss,
+                "kl": kl_loss,
             }
 
         def __init__(self):
