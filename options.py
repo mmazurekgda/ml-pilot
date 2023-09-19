@@ -104,6 +104,16 @@ TRAINING_STANDARD_CALLBACKS_OPTIONS = {
         "help": "Model checkpoint verbosity",
         "type": int,
     },
+    "model_checkpoint_save_weights_only": {
+        "default": True,
+        "help": "Model checkpoint save weights only",
+        "type": bool,
+    },
+    "model_checkpoint_save_best_only": {
+        "default": True,
+        "help": "Model checkpoint save best only",
+        "type": bool,
+    },
 }
 
 TRAINING_TENSORBOARD_OPTIONS = {
@@ -217,44 +227,5 @@ DATA_OPTIONS = {
         "help": "TFRecord compression level. "
         "To be used with the TFRecord dataloader.",
         "type": click.IntRange(min=1, max=9),
-    },
-}
-
-DATA_GENERATOR_OPTIONS = {
-    "generator_training_files_no": {
-        "default": None,
-        "help": "Number of training files to generate. "
-        "To be used with the data generator.",
-        "type": click.IntRange(min=1),
-    },
-    "generator_training_samples_no_per_file": {
-        "default": None,
-        "help": "Number of training samples per file to generate. "
-        "To be used with the data generator.",
-        "type": click.IntRange(min=1),
-    },
-    "generator_validation_files_no": {
-        "default": None,
-        "help": "Number of validation files to generate. "
-        "To be used with the data generator.",
-        "type": click.IntRange(min=1),
-    },
-    "generator_validation_samples_no_per_file": {
-        "default": None,
-        "help": "Number of validation samples per file to generate. "
-        "To be used with the data generator.",
-        "type": click.IntRange(min=1),
-    },
-    "generator_test_files_no": {
-        "default": None,
-        "help": "Number of test files to generate. "
-        "To be used with the data generator.",
-        "type": click.IntRange(min=1),
-    },
-    "generator_test_samples_no_per_file": {
-        "default": None,
-        "help": "Number of test samples per file to generate. "
-        "To be used with the data generator.",
-        "type": click.IntRange(min=1),
     },
 }
