@@ -53,8 +53,7 @@ def generate_tfrecord_datagenerator(encoder, datatype: str):
             )
             config.log.error(msg)
             raise FileNotFoundError(msg)
-        for _ in range(getattr(config, f"generator_{datatype}_files_no")):
-            file_name, example = encoder()
+        for file_name, examples in encoder():
             file_path = os.path.join(
                 getattr(config, f"tfrecord_{datatype}_files"),
                 file_name,
@@ -62,7 +61,8 @@ def generate_tfrecord_datagenerator(encoder, datatype: str):
             with tf.io.TFRecordWriter(
                 file_path, options=tf_file_options
             ) as writer:
-                writer.write(example.SerializeToString())
+                for example in examples:
+                    writer.write(example.SerializeToString())
             config.log.debug(f"--> Written to tfrecord_file: '{file_path}.'")
 
     return generator

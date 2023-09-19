@@ -13,7 +13,6 @@ from options import (
     TRAINING_STANDARD_CALLBACKS_OPTIONS,
     TRAINING_TENSORBOARD_OPTIONS,
     DATA_OPTIONS,
-    DATA_GENERATOR_OPTIONS,
 )
 from core.constants import (
     PROJECT_NAME,
@@ -33,7 +32,6 @@ class Config:
     }
 
     data_generator_options = {
-        **DATA_GENERATOR_OPTIONS,
         **DATA_OPTIONS,
     }
 
@@ -362,6 +360,8 @@ class Config:
         )
 
     def _freeze(self, dump_to_file=True):
+        if self._frozen:
+            return
         self._frozen = True
         self.log.debug("-> Freezing options. No additional changes possible.")
         if dump_to_file:
