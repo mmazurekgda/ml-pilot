@@ -229,3 +229,19 @@ DATA_OPTIONS = {
         "type": click.IntRange(min=1, max=9),
     },
 }
+
+CONVERTER_OPTIONS = {
+    "converter_model_path": {
+        "default": None,
+        "help": "Path to the model to convert.",
+        "type": click.Path(),
+    },
+}
+
+EVALUATION_OPTIONS = {
+    "model_path": {
+        "default": None,
+        "help": "Path to the model weights.",
+        "type": click.Path(),
+    },
+}
