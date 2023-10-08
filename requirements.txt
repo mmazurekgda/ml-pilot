@@ -95,6 +95,7 @@ notebook_shim==0.2.3
 numexpr @ file:///croot/numexpr_1683221822650/work
 numpy==1.24.3
 oauthlib==3.2.2
+onnx==1.14.1
 opt-einsum==3.3.0
 overrides==7.4.0
 packaging @ file:///croot/packaging_1693575174725/work
@@ -112,7 +113,7 @@ pluggy==1.3.0
 pre-commit==3.4.0
 prometheus-client==0.17.1
 prompt-toolkit==3.0.39
-protobuf==4.24.3
+protobuf==3.20.3
 psutil==5.9.5
 ptyprocess==0.7.0
 pure-eval==0.2.2
@@ -158,6 +159,7 @@ tensorflow-estimator==2.13.0
 tensorflow-io-gcs-filesystem==0.34.0
 termcolor==2.3.0
 terminado==0.17.1
+tf2onnx==1.15.1
 threadpoolctl==3.2.0
 tinycss2==1.2.1
 tornado==6.3.3

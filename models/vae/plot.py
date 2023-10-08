@@ -9,6 +9,7 @@ from scipy.optimize import curve_fit
 from core.config import Config
 from models.vae.observables import (
     LongitudinalProfile,
+    LateralProfile,
     ProfileType,
     Profile,
     Energy,
@@ -586,11 +587,20 @@ class EnergyPlotter(Plotter):
             out=np.zeros_like(full_simulation_cell_energy),
             where=(full_simulation_cell_energy != 0),
         )
+        log_full_simulation_cell_energy = log_full_simulation_cell_energy[
+            log_full_simulation_cell_energy != 0
+        ]
+        # log_ml_simulation_cell_energy = log_ml_simulation_cell_energy[
+        # log_ml_simulation_cell_energy > 0
+        # ]
         log_ml_simulation_cell_energy = np.log10(
             ml_simulation_cell_energy,
             out=np.zeros_like(ml_simulation_cell_energy),
             where=(ml_simulation_cell_energy != 0),
         )
+        log_ml_simulation_cell_energy = log_ml_simulation_cell_energy[
+            log_ml_simulation_cell_energy != 0
+        ]
         config = Config()
         plt.figure(figsize=(config.plots_figsize_x, config.plots_figsize_y))
         ax = plt.gca()
@@ -731,3 +741,76 @@ class EnergyPlotter(Plotter):
         self._plot_cell_energy()
         config.log.debug("Plotting energy per layer...")
         self._plot_energy_per_layer()
+
+
+def plot(
+    e_layer_g4,
+    e_layer_vae,
+):
+    config = Config()
+    # Reshape the events into 3D
+    events_no = e_layer_g4.shape[0]
+    rlabel = config.plots_mplhep_rlabel_header_name
+    if not rlabel:
+        rlabel = (
+            f"Experiment: '{config.experiment_name}'\n"
+            f"Model: '{config._model_name.upper()}'\n"
+            f"Test events no: {events_no}"
+        )
+    e_layer_vae = e_layer_vae.reshape(
+        (
+            e_layer_vae.shape[0],
+            config.cylinder_rho_cell_no,
+            config.cylinder_phi_cell_no,
+            config.cylinder_z_cell_no,
+        )
+    )
+
+    e_layer_g4 = e_layer_g4.reshape(
+        (
+            e_layer_g4.shape[0],
+            config.cylinder_rho_cell_no,
+            config.cylinder_phi_cell_no,
+            config.cylinder_z_cell_no,
+        )
+    )
+
+    # Create observables from raw data.
+    full_sim_long = LongitudinalProfile(_input=e_layer_g4)
+    full_sim_lat = LateralProfile(_input=e_layer_g4)
+    full_sim_energy = Energy(_input=e_layer_g4)
+    ml_sim_long = LongitudinalProfile(_input=e_layer_vae)
+    ml_sim_lat = LateralProfile(_input=e_layer_vae)
+    ml_sim_energy = Energy(_input=e_layer_vae)
+
+    # Plot observables
+    longitudinal_profile_plotter = ProfilePlotter(
+        None,  # particle_energy,
+        None,  # particle_angle,
+        None,  # geometry,
+        rlabel,
+        full_sim_long,
+        ml_sim_long,
+        _plot_gaussian=False,
+    )
+    lateral_profile_plotter = ProfilePlotter(
+        None,  # particle_energy,
+        None,  # particle_angle,
+        None,  # geometry,
+        rlabel,
+        full_sim_lat,
+        ml_sim_lat,
+        _plot_gaussian=False,
+    )
+    energy_plotter = EnergyPlotter(
+        None,  # particle_energy,
+        None,  # particle_angle,
+        None,  # geometry,
+        rlabel,
+        full_sim_energy,
+        ml_sim_energy,
+    )
+
+    longitudinal_profile_plotter.plot_and_save()
+    lateral_profile_plotter.plot_and_save()
+    energy_plotter.plot_and_save()

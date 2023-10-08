@@ -45,8 +45,24 @@ def generate_tfrecord_decoder(training: bool = True):
             * config.cylinder_phi_cell_no
             * config.cylinder_z_cell_no
         )
+
         shower = tf.sparse.reorder(shower)
         shower = tf.sparse.to_dense(shower)
+        total_shower_energy = tf.reduce_sum(parsed["y_edeps"])
+        # if total_shower_energy > 0.0:
+        #     shower /= total_shower_energy
+
+        shower_z_profile = tf.reduce_sum(shower, axis=(0, 1))
+        shower_rho_profile = tf.reduce_sum(shower, axis=(1, 2))
+        shower_phi_profile = tf.reduce_sum(shower, axis=(0, 2))
+
+        # shower_z_profile = tf.math.count_nonzero(shower, axis=(0, 1))
+        # shower_z_profile = tf.cast(shower_z_profile, tf.float32)
+        # shower_rho_profile = tf.math.count_nonzero(shower, axis=(1, 2))
+        # shower_rho_profile = tf.cast(shower_rho_profile, tf.float32)
+        # shower_phi_profile = tf.math.count_nonzero(shower, axis=(0, 2))
+        # shower_phi_profile = tf.cast(shower_phi_profile, tf.float32)
+
         shower = tf.reshape(shower, (total_shower_size,))
 
         latent_v = tf.random.normal(
@@ -54,16 +70,74 @@ def generate_tfrecord_decoder(training: bool = True):
         )
         particle = tf.reshape(parsed["x"], (5,))
 
+        total_number_of_hits = parsed["y_length"] / total_shower_size
+
+        # shower_no_zero = tf.reshape(shower, (total_shower_size,))
+        # shower_no_zero = shower_no_zero[shower_no_zero != 0.0]
+        # no_zero_count = shower_no_zero.shape[0]
+        # print(shower_no_zero.shape)
+        # # shower_no_zero = tf.flatten(shower_no_zero)
+        # total_number_of_hits = no_zero_count / total_shower_size
+
+        shower_no_zero = shower * particle[0] * config.max_energy * 1e3
+        shower_no_zero_mask = shower_no_zero != 0.0
+        shower_no_zero = tf.boolean_mask(shower_no_zero, shower_no_zero_mask)
+        shower_log = tf.math.log(shower_no_zero) / tf.math.log(10.0)
+        e_profile_max = 2
+        e_profile_min = -4.0
+        e_profile_bins = 40
+        e_profile_ind = tf.histogram_fixed_width_bins(
+            shower_log, [e_profile_min, e_profile_max], nbins=e_profile_bins
+        )
+        e_profile = []
+        for i in range(e_profile_bins):
+            mask = tf.equal(e_profile_ind, i)
+            e_profile_bin = tf.boolean_mask(shower_no_zero, mask)
+            e_profile_bin_sum = tf.math.count_nonzero(e_profile_bin)
+            e_profile_bin_sum = tf.expand_dims(e_profile_bin_sum, axis=0)
+            e_profile.append(e_profile_bin_sum)
+        e_profile = tf.concat(e_profile, axis=0)
+        e_profile = tf.cast(e_profile, tf.float32)
+
+        if tf.cast(parsed["y_length"], tf.float32) > 0:
+            e_profile /= tf.cast(parsed["y_length"], tf.float32)
+            # shower_z_profile /= tf.cast(parsed["y_length"], tf.float32)
+            # shower_rho_profile /= tf.cast(parsed["y_length"], tf.float32)
+            # shower_phi_profile /= tf.cast(parsed["y_length"], tf.float32)
+        else:
+            e_profile = tf.zeros_like(e_profile)
+
+        if tf.cast(total_shower_energy, tf.float32) > 0:
+            shower_z_profile /= tf.cast(total_shower_energy, tf.float32)
+            shower_rho_profile /= tf.cast(total_shower_energy, tf.float32)
+            shower_phi_profile /= tf.cast(total_shower_energy, tf.float32)
+        else:
+            shower_z_profile = tf.zeros_like(shower_z_profile)
+            shower_rho_profile = tf.zeros_like(shower_rho_profile)
+            shower_phi_profile = tf.zeros_like(shower_phi_profile)
+
+        # print(e_profile)
+        # raise ValueError
+
+        # mask = tf.math.greater(shower, 0.0)
+        # masked_shower = tf.ones_like(shower)
+        # masked_shower = tf.where(mask, masked_shower, 0.0)
+
         inputs = [
             latent_v,
             particle,
         ]
         outputs = {
-            "shower": shower,
-            "kl_loss": latent_v,  # dummy
+            "total_hits_no": total_number_of_hits,
+            "total_energy": total_shower_energy,
+            "z_profile": shower_z_profile,
+            "rho_profile": shower_rho_profile,
+            "phi_profile": shower_phi_profile,
+            "e_profile": e_profile,
+            "kl": latent_v,  # dummy
         }
-        if training:
-            inputs.append(shower)
+        # if training:
+        inputs.append(shower)
 
         return (
             tuple(inputs),

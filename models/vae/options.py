@@ -146,7 +146,7 @@ VAE_OPTIONS = {
     "reconstruction_loss": {
         "help": "Reconstruction loss",
         "default": "bce",
-        "type": click.Choice(["mse", "bce"]),
+        "type": click.Choice(["mse", "bce", "masked"]),
     },
 }
 
