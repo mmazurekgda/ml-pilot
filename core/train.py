@@ -26,6 +26,8 @@ def train(
     config.log.debug("--> Done.")
     config.log.debug("-> Compiling model...")
     model.compile(optimizer=optimizer, loss=loss())
+    # FIXME: why this needed?
+    tf.keras.backend.set_value(model.optimizer.lr, config.learning_rate)
     config.log.debug("--> Done.")
     config.log.debug("-> Dataset preparation...")
     dataset = dataset.batch(config.batch_size)
