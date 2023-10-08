@@ -13,7 +13,8 @@ from options import (
     TRAINING_STANDARD_CALLBACKS_OPTIONS,
     TRAINING_TENSORBOARD_OPTIONS,
     DATA_OPTIONS,
-    DATA_GENERATOR_OPTIONS,
+    CONVERTER_OPTIONS,
+    EVALUATION_OPTIONS,
 )
 from core.constants import (
     PROJECT_NAME,
@@ -32,10 +33,16 @@ class Config:
         **DATA_OPTIONS,
     }
 
+    evaluation_options = {
+        **DATA_OPTIONS,
+        **EVALUATION_OPTIONS,
+    }
+
     data_generator_options = {
-        **DATA_GENERATOR_OPTIONS,
         **DATA_OPTIONS,
     }
+
+    converter_options = CONVERTER_OPTIONS
 
     model_options = {}
 
@@ -50,6 +57,8 @@ class Config:
             **Config.training_options,
             **Config.data_generator_options,
             **Config.model_options,
+            **Config.converter_options,
+            **Config.evaluation_options,
         }
 
     def options(self):
@@ -58,6 +67,8 @@ class Config:
             **self.training_options,
             **self.data_generator_options,
             **self.model_options,
+            **self.converter_options,
+            **self.evaluation_options,
         }
 
     _options_with_dirs = [
@@ -144,14 +155,13 @@ class Config:
             raise ValueError("Already configured!")
         self.configured = True
 
-        if not kwargs.get("run_number") or kwargs.get("add_timestamp"):
-            start_time = datetime.now()
-            run_number = ""
-            if kwargs.get("run_number"):
-                run_number = kwargs["run_number"] + "_"
-            kwargs[
-                "run_number"
-            ] = f"{run_number}{start_time.strftime('%Y%m%d_%H%M%S%f')}"
+        start_time = datetime.now()
+        run_number = ""
+        if kwargs.get("run_number"):
+            run_number = kwargs["run_number"] + "_"
+        kwargs[
+            "run_number"
+        ] = f"{run_number}{start_time.strftime('%Y%m%d_%H%M%S%f')}"
         if not output_area:
             output_area = "./runs/"
             if kwargs.get("experiment_name"):
