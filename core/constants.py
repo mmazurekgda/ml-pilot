@@ -9,4 +9,6 @@ ACTIVE_MODEL_NAMES = [
 POSSIBLE_ACTIONS = [
     "train",
     "generate",
+    "convert",
+    "evaluate",
 ]
