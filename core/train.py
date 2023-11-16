@@ -24,6 +24,10 @@ def train(
     config.log.debug("-> Adding the optimizer.")
     optimizer = tf.keras.optimizers.Adam(lr=config.learning_rate)
     config.log.debug("--> Done.")
+    if config.model_path:
+        config.log.debug("-> Loading weights: ")
+        model.load_weights(config.model_path).expect_partial()
+        config.log.debug("--> Done.")
     config.log.debug("-> Compiling model...")
     model.compile(optimizer=optimizer, loss=loss())
     # FIXME: why this needed?
