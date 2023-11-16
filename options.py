@@ -41,6 +41,11 @@ TRAINING_OPTIONS = {
         "help": "Batch size",
         "type": click.IntRange(min=1),
     },
+    "model_path": {
+        "default": None,
+        "help": "Path to the model weights.",
+        "type": click.Path(),
+    },
 }
 
 TRAINING_STANDARD_CALLBACKS_OPTIONS = {
