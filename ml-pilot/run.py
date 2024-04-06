@@ -5,12 +5,12 @@ from core.constants import (
     PROJECT_DESCRIPTION,
     ACTIVE_MODEL_NAMES,
 )
-from core.utils import set_default_options, add_options
-from core.model import model_cli_generator
-from core.train import train_cli_generator
-from core.generate import data_generator_cli_generator
-from core.convert import converter_cli_generator
-from core.evaluate import evaluate_cli_generator
+# from core.utils import set_default_options, add_options
+# from core.model import model_cli_generator
+# from core.train import train_cli_generator
+# from core.generate import data_generator_cli_generator
+# from core.convert import converter_cli_generator
+# from core.evaluate import evaluate_cli_generator
 
 
 def cli_generator():

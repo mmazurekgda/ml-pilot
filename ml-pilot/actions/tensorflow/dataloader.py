@@ -1,6 +1,66 @@
 import os
 from core.config import Config
 
+DATA_OPTIONS = {
+    "dataloader_type": {
+        "default": "tfrecord",
+        "help": "Dataloader type",
+        "type": click.Choice(
+            [
+                "tfrecord",
+                "custom",
+            ]
+        ),
+    },
+    "tfrecord_training_files": {
+        "default": None,
+        "help": "TFRecord training files. "
+        "To be used with the TFRecord dataloader.",
+        "type": click.Path(exists=True),
+    },
+    "tfrecord_validation_files": {
+        "default": None,
+        "help": "TFRecord validation files. "
+        "To be used with the TFRecord dataloader.",
+        "type": click.Path(exists=True),
+    },
+    "tfrecord_test_files": {
+        "default": None,
+        "help": "TFRecord testing files. "
+        "To be used with the TFRecord dataloader.",
+        "type": click.Path(exists=True),
+    },
+    "tfrecord_buffer_size": {
+        "default": None,
+        "help": "TFRecord buffer size. "
+        "To be used with the TFRecord dataloader.",
+        "type": click.IntRange(min=1),
+    },
+    "tfrecord_num_parallel_reads": {
+        "default": os.cpu_count(),
+        "help": "TFRecord number of parallel reads. "
+        "To be used with the TFRecord dataloader.",
+        "type": click.IntRange(min=1),
+    },
+    "tfrecord_compression_type": {
+        "default": "GZIP",
+        "help": "TFRecord compression type. "
+        "To be used with the TFRecord dataloader.",
+        "type": click.Choice(
+            [
+                "GZIP",
+                "ZLIB",
+                "",
+            ]
+        ),
+    },
+    "tfrecord_compression_level": {
+        "default": 9,
+        "help": "TFRecord compression level. "
+        "To be used with the TFRecord dataloader.",
+        "type": click.IntRange(min=1, max=9),
+    },
+}
 
 def generate_tfrecord_dataloader(decoder, datatype: str):
     import tensorflow as tf

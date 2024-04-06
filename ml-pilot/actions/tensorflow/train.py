@@ -4,6 +4,158 @@ import click
 from core.config import Config
 from core.utils import add_options
 
+TRAINING_OPTIONS = {
+    "learning_rate": {
+        "default": 1e-4,
+        "help": "Learning rate",
+        "type": float,
+    },
+    "epochs": {
+        "default": 1,
+        "help": "Number of epochs. If not provided, "
+        "the model will be trained until the "
+        "validation loss stops decreasing. "
+        "This must be set with callbacks.",
+        "type": click.IntRange(min=1),
+    },
+    "batch_size": {
+        "default": 1,
+        "help": "Batch size",
+        "type": click.IntRange(min=1),
+    },
+    "model_path": {
+        "default": None,
+        "help": "Path to the model weights.",
+        "type": click.Path(),
+    },
+}
+
+TRAINING_STANDARD_CALLBACKS_OPTIONS = {
+    "reduce_lr": {
+        "default": False,
+        "help": "Reduce learning rate on plateau",
+        "type": bool,
+    },
+    "reduce_lr_verbosity": {
+        "default": 1,
+        "help": "Reduce learning rate on plateau verbosity",
+        "type": int,
+    },
+    "reduce_lr_patience": {
+        "default": 10,
+        "help": "Reduce learning rate on plateau patience",
+        "type": click.IntRange(min=1),
+    },
+    "reduce_lr_cooldown": {
+        "default": 10,
+        "help": "Reduce learning rate on plateau cooldown",
+        "type": click.IntRange(min=0),
+    },
+    "early_stopping": {
+        "default": False,
+        "help": "Early stopping",
+        "type": bool,
+    },
+    "early_stopping_verbosity": {
+        "default": 1,
+        "help": "Early stopping verbosity",
+        "type": int,
+    },
+    "early_stopping_patience": {
+        "default": 30,
+        "help": "Early stopping patience",
+        "type": click.IntRange(min=1),
+    },
+    "early_stopping_min_delta": {
+        "default": 1e-6,
+        "help": "Early stopping min delta",
+        "type": float,
+    },
+    "early_stopping_restore": {
+        "default": True,
+        "help": "Early stopping restore best weights",
+        "type": bool,
+    },
+    "model_checkpoint": {
+        "default": False,
+        "help": "Model checkpoint",
+        "type": bool,
+    },
+    "model_checkpoint_out_weight_file": {
+        "default": "model_with_weights.tf",
+        "help": "Model checkpoint output weight file",
+        "type": str,
+    },
+    "model_checkpoint_verbosity": {
+        "default": 1,
+        "help": "Model checkpoint verbosity",
+        "type": int,
+    },
+    "model_checkpoint_save_weights_only": {
+        "default": True,
+        "help": "Model checkpoint save weights only",
+        "type": bool,
+    },
+    "model_checkpoint_save_best_only": {
+        "default": True,
+        "help": "Model checkpoint save best only",
+        "type": bool,
+    },
+}
+
+TRAINING_TENSORBOARD_OPTIONS = {
+    "tensorboard": {
+        "default": False,
+        "help": "Tensorboard",
+        "type": bool,
+    },
+    "tensorboard_log_dir_name": {
+        "default": "tensorboard",
+        "help": "Tensorboard log dir",
+        "type": str,
+    },
+    "tensorboard_histogram_freq": {
+        "default": 1,
+        "help": "Tensorboard histogram freq",
+        "type": click.IntRange(min=1),
+    },
+    "tensorboard_write_graph": {
+        "default": True,
+        "help": "Tensorboard write graph",
+        "type": bool,
+    },
+    "tensorboard_write_images": {
+        "default": False,
+        "help": "Tensorboard write images",
+        "type": bool,
+    },
+    "tensorboard_update_freq": {
+        "default": "epoch",
+        "help": "Tensorboard update freq",
+        "type": click.Choice(
+            [
+                "batch",
+                "epoch",
+            ]
+        ),
+    },
+    "tensorboard_profile_batch": {
+        "default": 0,
+        "help": "Tensorboard profile batch",
+        "type": click.IntRange(min=0),
+    },
+    "tensorboard_embeddings_freq": {
+        "default": 1,
+        "help": "Tensorboard embeddings freq",
+        "type": click.IntRange(min=0),
+    },
+    "tensorboard_embeddings_metadata": {
+        "default": None,
+        "help": "Tensorboard embeddings metadata",
+        "type": str,
+    },
+}
+
 
 def train(
     model,
