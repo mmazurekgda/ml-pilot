@@ -5,7 +5,6 @@ from core.config import Config
 from core.utils import add_options
 
 
-
 EVALUATION_OPTIONS = {
     "model_path": {
         "default": None,
