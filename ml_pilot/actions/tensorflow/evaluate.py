@@ -5,6 +5,15 @@ from core.config import Config
 from core.utils import add_options
 
 
+EVALUATION_OPTIONS = {
+    "model_path": {
+        "default": None,
+        "help": "Path to the model weights.",
+        "type": click.Path(),
+    },
+}
+
+
 def evaluate(
     model,
     evaluate,

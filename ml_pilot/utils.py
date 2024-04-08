@@ -1,11 +1,11 @@
 import click
-from core.config import Config
+# from core.config import Config
 from importlib import import_module
 
 
-def set_default_options(verbosity: str, output_area: str, **kwargs):
-    config = Config()
-    config.configure(verbosity=verbosity, output_area=output_area, **kwargs)
+# def set_default_options(verbosity: str, output_area: str, **kwargs):
+#     config = Config()
+#     config.configure(verbosity=verbosity, output_area=output_area, **kwargs)
 
 
 def add_options(mode: str, model_name: str = None):

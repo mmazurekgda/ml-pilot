@@ -5,6 +5,16 @@ from core.config import Config
 from core.utils import add_options
 
 
+CONVERTER_OPTIONS = {
+    "converter_model_path": {
+        "default": None,
+        "help": "Path to the model to convert.",
+        "type": click.Path(),
+    },
+}
+
+
+
 def convert(full_model):
     import tf2onnx
 

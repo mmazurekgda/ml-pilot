@@ -1,16 +1,5 @@
 import click
 import pyfiglet as pf
-from core.constants import (
-    PROJECT_NAME,
-    PROJECT_DESCRIPTION,
-    ACTIVE_MODEL_NAMES,
-)
-from core.utils import set_default_options, add_options
-from core.model import model_cli_generator
-from core.train import train_cli_generator
-from core.generate import data_generator_cli_generator
-from core.convert import converter_cli_generator
-from core.evaluate import evaluate_cli_generator
 
 
 def cli_generator():
@@ -34,9 +23,9 @@ def cli_generator():
         type=str,
         help="Output area for the run.",
     )
-    @add_options(mode="general")
-    def _cli(*args, **kwargs):
-        set_default_options(*args, **kwargs)
+    # @add_options(mode="general")
+    # def _cli(*args, **kwargs):
+    #     set_default_options(*args, **kwargs)
 
     _cli.__doc__ = PROJECT_DESCRIPTION
     return _cli
