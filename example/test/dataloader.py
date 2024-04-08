@@ -1,12 +1,15 @@
-from core.config import Config
 import string
 import random
+
+from ml_pilot.proxy import SettingsProxy
+from model import TestModelOptions
 
 
 def generate_tfrecord_decoder():
     import tensorflow as tf
 
-    config = Config()
+    proxy: SettingsProxy = SettingsProxy()
+    config: TestModelOptions = proxy.get_settings("TestModelOptions")
 
     def decoder(dataset):
         parsed = tf.io.parse_single_example(
@@ -32,7 +35,8 @@ def generate_tfrecord_decoder():
 def generate_tfrecord_encoder(files_no: int, samples_no: int):
     import tensorflow as tf
 
-    config = Config()
+    proxy: SettingsProxy = SettingsProxy()
+    config: TestModelOptions = proxy.get_settings("TestModelOptions")
 
     def encoder():
         counter = 0

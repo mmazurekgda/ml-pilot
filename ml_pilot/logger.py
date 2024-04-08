@@ -34,7 +34,7 @@ class CustomFormatter(logging.Formatter):
 
 
 def activate_logger(
-    directory: str = None,
+    directory: str | None = None,
     logger_level: str = "",
     root_logger_level: str = "CRITICAL",
     stdout=None,

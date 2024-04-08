@@ -1,98 +1,67 @@
-from ml
+import click
+import pyfiglet as pf
+from pydantic import BaseModel, Field
+from pydantic_settings import BaseSettings
+from pydanclick import from_pydantic
+from ml_pilot.proxy import SettingsProxy
+
+from ml_pilot.actions.tensorflow.train import TrainingOptions
+from ml_pilot.actions.tensorflow.dataloader import DataloaderOptions
+
+from model import create_test_model, TestModelOptions
+from generate import generate, GenerateOptions
+from train import train
 
 
 
+main_cli = SettingsProxy.get_main_cli()
 
 
+@click.group()
+@from_pydantic("test_model_opts", TestModelOptions)
+def test_model_cli(
+    test_model_opts: TestModelOptions,
+):
+    proxy = SettingsProxy()
+    proxy.add_settings(test_model_opts)
 
 
+@click.command()
+@from_pydantic("training", TrainingOptions)
+@from_pydantic("data_loader_opts", DataloaderOptions)
+def training_cli(
+    training_options: TrainingOptions,
+    data_loader_opts: DataloaderOptions,
+):
+    proxy: SettingsProxy = SettingsProxy()
+    proxy.set_model(create_test_model())
+    proxy.add_settings(training_options)
+    proxy.add_settings(data_loader_opts)
+    proxy.freeze()
+    train()
 
 
+@click.command()
+@from_pydantic("generate_opts", GenerateOptions)
+@from_pydantic("data_loader_opts", DataloaderOptions)
+def generate_cli(
+    generate_opts: GenerateOptions,
+    data_loader_opts: DataloaderOptions,
+):
+    proxy: SettingsProxy = SettingsProxy()
+    proxy.add_settings(generate_opts)
+    proxy.add_settings(data_loader_opts)
+    proxy.freeze()
+    generate()
 
 
+test_model_cli.add_command(training_cli)
+test_model_cli.add_command(generate_cli)
+main_cli.add_command(test_model_cli)
 
 
-
-
-
-
-# from core.train import train
-# from core.generate import generate
-# from core.dataset import (
-#     generate_tfrecord_datagenerator,
-#     generate_tfrecord_dataloader,
-# )
-# from core.config import Config
-# from models.test.model import generate_model
-# from models.test.loss import generate_loss
-# from models.test.dataset import (
-#     generate_tfrecord_encoder,
-#     generate_tfrecord_decoder,
-# )
-
-
-# def run() -> bool:
-#     config = Config()
-#     config._freeze()
-#     config.check_readiness()
-#     config.log.info(
-#         f"-> Starting the run for the '{config._model_name}' model."
-#     )
-#     if config._action == "train":
-#         model = generate_model()
-#         dataset = None
-#         val_dataset = None
-#         if config.dataloader_type == "tfrecord":
-#             dataset = generate_tfrecord_dataloader(
-#                 generate_tfrecord_decoder(),
-#                 "training",
-#             )()
-#             val_dataset = generate_tfrecord_dataloader(
-#                 generate_tfrecord_decoder(),
-#                 "validation",
-#             )()
-#         else:
-#             raise NotImplementedError(
-#                 f"Dataloader type '{config.dataloader_type}' not implemented."
-#             )
-#         train(model, generate_loss, dataset, val_dataset)
-#     elif config._action == "generate":
-
-#         def data_generator():
-#             for datatype in ["training", "validation", "test"]:
-#                 config.log.info(f"-> Generating '{datatype}' data.")
-#                 if getattr(config, f"generator_{datatype}_files_no"):
-#                     if config.dataloader_type == "tfrecord":
-#                         samples_no = getattr(
-#                             config,
-#                             f"generator_{datatype}_samples_no_per_file",
-#                         )
-#                         files_no = getattr(
-#                             config, f"generator_{datatype}_files_no"
-#                         )
-#                         generate_tfrecord_datagenerator(
-#                             generate_tfrecord_encoder(
-#                                 files_no=files_no,
-#                                 samples_no=samples_no,
-#                             ),
-#                             datatype,
-#                         )()
-#                     else:
-#                         raise NotImplementedError(
-#                             f"Dataloader type '{config.dataloader_type}'"
-#                             " not implemented."
-#                         )
-#                 else:
-#                     config.log.warning(
-#                         f"No '{datatype}' data will be generated. "
-#                     )
-
-#         generate(data_generator)
-#     else:
-#         raise NotImplementedError(
-#             f"Action '{config._action}' not implemented."
-#         )
-#     return True
+if __name__ == "__main__":
+    main_cli()
 
 
 
